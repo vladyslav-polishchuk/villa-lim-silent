@@ -2,7 +2,7 @@ import { distances, villa } from "@/lib/content";
 
 const { lat, lng } = villa.coordinates;
 const { name: placeName, featureId, url: mapsLink } = villa.mapsPlace;
-const mapsEmbedSrc = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12000!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s${encodeURIComponent(featureId)}!2s${encodeURIComponent(placeName)}!5e0!3m2!1sen!2shr`;
+const mapsEmbedSrc = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d100000!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s${encodeURIComponent(featureId)}!2s${encodeURIComponent(placeName)}!5e0!3m2!1sen!2shr`;
 
 export function Location() {
   return (
