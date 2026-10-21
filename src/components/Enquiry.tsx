@@ -2,22 +2,31 @@
 
 import { FormEvent, useMemo, useState, useTransition } from "react";
 import { sendEnquiry } from "@/app/actions";
+import type { EnquiryError } from "@/app/actions";
+import type { Dictionary } from "@/dictionaries/en";
 import {
   formatDateRange,
+  formatPrice,
   quoteStay,
   rates,
   villa,
 } from "@/lib/content";
+import { fill, plural, type Locale } from "@/lib/i18n";
 
-export function Enquiry() {
+export function Enquiry({ lang, t }: { lang: Locale; t: Dictionary["enquiry"] }) {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState("2");
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<EnquiryError | null>(null);
   const [pending, startTransition] = useTransition();
 
   const quote = useMemo(() => quoteStay(checkIn, checkOut), [checkIn, checkOut]);
+  const nights = (count: number) => `${count} ${plural(lang, count, t.nights)}`;
+  const errorText = (code: EnquiryError) =>
+    code === "minStay"
+      ? fill(t.errors.minStay, { nights: nights(quote.minNights) })
+      : t.errors[code];
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,33 +47,31 @@ export function Enquiry() {
       <div className="mx-auto grid max-w-6xl gap-12 px-5 py-20 md:grid-cols-[0.9fr_1.1fr] md:px-8 md:py-24">
         <div>
           <p className="text-xs tracking-[0.28em] text-gold uppercase">
-            Reservation
+            {t.eyebrow}
           </p>
           <h2 className="mt-3 font-serif text-4xl text-white md:text-5xl">
-            Request your stay
+            {t.title}
           </h2>
           <p className="mt-5 leading-8 text-white/70">
-            From €{villa.fromPrice} per night. This first version estimates the
-            published seasonal rate and collects an enquiry — it does not complete
-            a booking.
+            {fill(t.intro, { price: formatPrice(villa.fromPrice, lang) })}
           </p>
           <div className="mt-8 max-h-[320px] overflow-auto rounded-2xl border border-white/10">
             <table className="w-full text-left text-sm">
               <thead className="text-gold">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Dates</th>
-                  <th className="px-4 py-3 font-medium">Per night</th>
-                  <th className="px-4 py-3 font-medium">Min.</th>
+                  <th className="px-4 py-3 font-medium">{t.table.dates}</th>
+                  <th className="px-4 py-3 font-medium">{t.table.perNight}</th>
+                  <th className="px-4 py-3 font-medium">{t.table.min}</th>
                 </tr>
               </thead>
               <tbody>
                 {rates.map((rate) => (
                   <tr key={rate.start} className="border-t border-white/10">
                     <td className="px-4 py-3">
-                      {formatDateRange(rate.start, rate.end)}
+                      {formatDateRange(rate.start, rate.end, lang)}
                     </td>
-                    <td className="px-4 py-3">€{rate.price.toFixed(0)}</td>
-                    <td className="px-4 py-3">{rate.minNights} nights</td>
+                    <td className="px-4 py-3">{formatPrice(rate.price, lang)}</td>
+                    <td className="px-4 py-3">{nights(rate.minNights)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -75,8 +82,7 @@ export function Enquiry() {
         {sent ? (
           <div className="flex items-center rounded-3xl bg-white/5 p-10">
             <p className="font-serif text-3xl text-white">
-              Thank you. Your request has been sent — we&apos;ll reply by email
-              shortly.
+              {t.thanks}
             </p>
           </div>
         ) : (
@@ -84,9 +90,10 @@ export function Enquiry() {
             onSubmit={onSubmit}
             className="grid gap-4 rounded-3xl bg-white p-6 text-ink md:p-8"
           >
+            <input type="hidden" name="lang" value={lang} />
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm">
-                Check-in
+                {t.checkIn}
                 <input
                   required
                   type="date"
@@ -97,7 +104,7 @@ export function Enquiry() {
                 />
               </label>
               <label className="grid gap-2 text-sm">
-                Check-out
+                {t.checkOut}
                 <input
                   required
                   type="date"
@@ -109,7 +116,7 @@ export function Enquiry() {
               </label>
             </div>
             <label className="grid gap-2 text-sm">
-              Guests
+              {t.guestsLabel}
               <select
                 name="guests"
                 value={guests}
@@ -119,7 +126,7 @@ export function Enquiry() {
                 {Array.from({ length: villa.guests }, (_, i) => i + 1).map(
                   (n) => (
                     <option key={n} value={n}>
-                      {n} {n === 1 ? "guest" : "guests"}
+                      {n} {plural(lang, n, t.guests)}
                     </option>
                   ),
                 )}
@@ -127,11 +134,11 @@ export function Enquiry() {
             </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm">
-                Name
+                {t.name}
                 <input required name="name" className="rounded-xl border border-line px-3 py-3" />
               </label>
               <label className="grid gap-2 text-sm">
-                Email
+                {t.email}
                 <input
                   required
                   type="email"
@@ -141,27 +148,27 @@ export function Enquiry() {
               </label>
             </div>
             <label className="grid gap-2 text-sm">
-              Message
+              {t.message}
               <textarea
                 name="message"
                 rows={4}
                 className="rounded-xl border border-line px-3 py-3"
-                placeholder="Anything we should know — pets, arrival time, questions."
+                placeholder={t.messagePlaceholder}
               />
             </label>
             <div className="rounded-2xl bg-cream px-4 py-4 text-sm">
               {quote.error ? (
-                <p>{quote.error}</p>
+                <p>{errorText(quote.error)}</p>
               ) : (
                 <p>
-                  {quote.nights} nights · estimated total{" "}
-                  <strong>€{quote.total.toFixed(0)}</strong>
+                  {fill(t.estimate, { nights: nights(quote.nights) })}{" "}
+                  <strong>{formatPrice(quote.total, lang)}</strong>
                 </p>
               )}
             </div>
             {error && (
               <p role="alert" className="text-sm text-red-700">
-                {error}
+                {errorText(error)}
               </p>
             )}
             <button
@@ -169,7 +176,7 @@ export function Enquiry() {
               disabled={pending}
               className="rounded-full bg-ink px-6 py-3.5 text-cream hover:bg-gold-deep disabled:opacity-60"
             >
-              {pending ? "Sending…" : "Send request"}
+              {pending ? t.sending : t.send}
             </button>
           </form>
         )}

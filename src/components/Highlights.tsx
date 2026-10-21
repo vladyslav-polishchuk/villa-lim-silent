@@ -1,10 +1,10 @@
-import { highlights } from "@/lib/content";
+import type { Dictionary } from "@/dictionaries/en";
 
-export function Highlights() {
+export function Highlights({ items }: { items: Dictionary["highlights"] }) {
   return (
     <section className="bg-ink text-cream">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px border-t border-gold/30 md:grid-cols-4">
-        {highlights.map((item) => (
+        {items.map((item) => (
           <div key={item.label} className="px-6 py-8 md:px-8">
             <p className="text-xs tracking-[0.22em] text-gold uppercase">
               {item.label}
