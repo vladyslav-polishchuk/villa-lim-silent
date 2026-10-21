@@ -2,9 +2,9 @@
 
 import { formatDateRange, quoteStay, villa } from "@/lib/content";
 
-const ENQUIRY_TO = "gm.vpolishchuk@gmail.com";
+const ENQUIRY_TO = ["gm.vpolishchuk@gmail.com", "zajbermatjaz@gmail.com"];
 // Resend's shared test sender; it can only deliver to the Resend account owner's
-// address. Replace with an address on a verified domain to send elsewhere.
+// address. Replace with an address on a verified domain to send to everyone above.
 const ENQUIRY_FROM = "Villa enquiries <onboarding@resend.dev>";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -71,7 +71,7 @@ export async function sendEnquiry(formData: FormData): Promise<EnquiryResult> {
     },
     body: JSON.stringify({
       from: ENQUIRY_FROM,
-      to: [ENQUIRY_TO],
+      to: ENQUIRY_TO,
       reply_to: email,
       subject: `Stay request: ${checkIn} → ${checkOut}, ${name}`,
       text,
