@@ -20,6 +20,25 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Enquiry emails
+
+The reservation form sends each request by email from a Gmail account using [Nodemailer](https://nodemailer.com) (free, roughly 500 emails/day). The recipients come from environment variables: `ENQUIRY_TO` (required) and `ENQUIRY_CC` (optional), each a comma-separated list of addresses. Set them in `.env.local` and in the host's environment variables.
+
+1. Turn on 2-Step Verification for the sending Google account, then create an [App Password](https://myaccount.google.com/apppasswords).
+2. Add the credentials to `.env.local` locally, and to your host's environment variables in production:
+
+   ```bash
+   GMAIL_USER=gm.vpolishchuk@gmail.com
+   GMAIL_APP_PASSWORD=abcdefghijklmnop
+   ```
+
+## Seasonal prices (Google Sheet)
+
+The owner edits prices on the `/admin` page (Prices section); they are stored in the `rates` table of the Postgres database and are the only source of prices. Saving refreshes the site immediately.
+
+- Each season has `start`, `end` (the first day that is **not** in the season), a regular price, an optional discounted price (must be lower), a minimum number of nights and an optional discount note. Seasons must not overlap. If a discounted price is set, the table shows the regular price crossed out, the discounted price next to it and the note as a tooltip; quotes use the discounted price.
+- If the database is unreachable or no seasons are saved yet, the reservation section shows "Prices are unavailable" and the problem is logged (`Rates unavailable: ...`). A failure is retried within about 15 seconds.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
