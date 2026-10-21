@@ -2,14 +2,16 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import type { Dictionary } from "@/dictionaries/en";
 import { gallery } from "@/lib/content";
+import { fill } from "@/lib/i18n";
 
 const PREVIEW_COUNT = 9;
 
 const step = (index: number | null, delta: number) =>
   index === null ? index : (index + delta + gallery.length) % gallery.length;
 
-export function Gallery() {
+export function Gallery({ t }: { t: Dictionary["gallery"] }) {
   const [active, setActive] = useState<number | null>(null);
   const [showAll, setShowAll] = useState(false);
   const visible = showAll ? gallery : gallery.slice(0, PREVIEW_COUNT);
@@ -31,12 +33,12 @@ export function Gallery() {
   return (
     <section id="gallery" className="bg-ink py-20 text-cream md:py-24">
       <div className="mx-auto max-w-6xl px-5 md:px-8">
-        <p className="text-xs tracking-[0.28em] text-gold uppercase">Images</p>
-        <h2 className="mt-3 font-serif text-4xl text-white md:text-5xl">Gallery</h2>
+        <p className="text-xs tracking-[0.28em] text-gold uppercase">{t.eyebrow}</p>
+        <h2 className="mt-3 font-serif text-4xl text-white md:text-5xl">{t.title}</h2>
         <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-3">
-          {visible.map((image, index) => (
+          {visible.map((src, index) => (
             <button
-              key={image.src}
+              key={src}
               type="button"
               onClick={() => setActive(index)}
               className={`relative overflow-hidden rounded-2xl ${
@@ -44,8 +46,8 @@ export function Gallery() {
               }`}
             >
               <Image
-                src={image.src}
-                alt={image.alt}
+                src={src}
+                alt={t.alts[index]}
                 fill
                 sizes={
                   index === 0
@@ -64,7 +66,7 @@ export function Gallery() {
               onClick={() => setShowAll((value) => !value)}
               className="rounded-full border border-white/40 bg-white/10 px-5 py-3 text-sm text-white hover:bg-white/20"
             >
-              {showAll ? "Show fewer photos" : `Show all ${gallery.length} photos`}
+              {showAll ? t.showFewer : fill(t.showAll, { count: gallery.length })}
             </button>
           </div>
         ) : null}
@@ -76,9 +78,9 @@ export function Gallery() {
         >
           <div className="relative h-[80vh] w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
             <Image
-              key={gallery[active].src}
-              src={gallery[active].src}
-              alt={gallery[active].alt}
+              key={gallery[active]}
+              src={gallery[active]}
+              alt={t.alts[active]}
               fill
               sizes="(min-width: 1024px) 1024px, 100vw"
               quality={90}
@@ -89,11 +91,11 @@ export function Gallery() {
               className="absolute top-0 right-0 rounded-full bg-white/10 px-4 py-2 text-white"
               onClick={() => setActive(null)}
             >
-              Close
+              {t.close}
             </button>
             <button
               type="button"
-              aria-label="Previous photo"
+              aria-label={t.previous}
               className="absolute top-1/2 left-0 -translate-y-1/2 rounded-full bg-white/10 px-4 py-3 text-white hover:bg-white/20"
               onClick={showPrevious}
             >
@@ -101,7 +103,7 @@ export function Gallery() {
             </button>
             <button
               type="button"
-              aria-label="Next photo"
+              aria-label={t.next}
               className="absolute top-1/2 right-0 -translate-y-1/2 rounded-full bg-white/10 px-4 py-3 text-white hover:bg-white/20"
               onClick={showNext}
             >
