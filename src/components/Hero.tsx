@@ -13,9 +13,9 @@ export function Hero() {
       />
       <div className="absolute inset-0 bg-linear-to-t from-ink via-ink/35 to-ink/25" />
       <div className="relative mx-auto flex min-h-[92vh] max-w-6xl flex-col justify-end px-5 pb-16 md:px-8 md:pb-20">
-        <p className="mb-3 flex items-center gap-3 text-sm tracking-[0.22em] text-gold uppercase">
+        <p className="mb-4 flex w-fit items-center gap-3 rounded-full border border-white/15 bg-ink/45 px-4 py-2 text-sm font-medium tracking-[0.22em] text-[color-mix(in_srgb,var(--gold)_55%,white)] uppercase backdrop-blur-md">
           <span>★ {villa.rating}</span>
-          <span className="h-px w-8 bg-gold/70" />
+          <span className="h-px w-8 bg-current opacity-60" />
           <span>
             {villa.location}, {villa.country}
           </span>
