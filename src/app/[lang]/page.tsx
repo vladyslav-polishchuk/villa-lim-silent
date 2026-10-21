@@ -11,15 +11,65 @@ import { Location } from "@/components/Location";
 import { Reviews } from "@/components/Reviews";
 import { Rooms } from "@/components/Rooms";
 import { getDictionary } from "@/dictionaries";
-import { hasLocale } from "@/lib/i18n";
+import { formatPrice, gallery, siteUrl, villa } from "@/lib/content";
+import { hasLocale, locales } from "@/lib/i18n";
 
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "VacationRental",
+    "@id": `${siteUrl}/#villa`,
+    identifier: "villa-lim-silent",
+    name: villa.name,
+    description: dict.meta.description,
+    url: `${siteUrl}/${lang}`,
+    image: ["/sections/hero.jpg", ...gallery.slice(0, 12)].map((src) => `${siteUrl}${src}`),
+    latitude: villa.coordinates.lat,
+    longitude: villa.coordinates.lng,
+    hasMap: villa.mapsPlace.url,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Matohanci",
+      addressRegion: "Istria",
+      addressCountry: "HR",
+    },
+    checkinTime: villa.checkIn,
+    checkoutTime: villa.checkOut,
+    petsAllowed: villa.pets > 0,
+    priceRange: `${formatPrice(villa.fromPrice, lang)}+`,
+    knowsLanguage: [...locales],
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: villa.rating,
+      ratingCount: villa.reviewCount,
+      bestRating: 5,
+    },
+    amenityFeature: ["Heated pool", "Air conditioning", "Free Wi-Fi", "Private parking", "Barbecue", "Fenced garden"].map(
+      (name) => ({ "@type": "LocationFeatureSpecification", name, value: true }),
+    ),
+    containsPlace: {
+      "@type": "Accommodation",
+      additionalType: "EntirePlace",
+      numberOfBedrooms: villa.bedrooms,
+      numberOfBathroomsTotal: villa.bathrooms,
+      occupancy: { "@type": "QuantitativeValue", maxValue: villa.guests },
+      floorSize: { "@type": "QuantitativeValue", value: villa.livingArea, unitCode: "MTK" },
+      bed: { "@type": "BedDetails", numberOfBeds: villa.bedrooms, typeOfBed: "King" },
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <Header lang={lang} t={dict.header} />
       <main>
         <Hero lang={lang} t={dict.hero} />

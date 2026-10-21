@@ -1,5 +1,13 @@
 import { defaultLocale, intlLocales, type Locale } from "@/lib/i18n";
 
+// Search engines need absolute URLs; set NEXT_PUBLIC_SITE_URL to the production domain.
+export const siteUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000")
+).replace(/\/$/, "");
+
 export const villa = {
   name: "Villa Lim Silent",
   location: "Matohanci, Rovinj",
