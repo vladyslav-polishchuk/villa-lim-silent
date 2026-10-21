@@ -1,11 +1,9 @@
 "use server";
 
+import nodemailer from "nodemailer";
 import { formatDateRange, quoteStay, villa } from "@/lib/content";
 
 const ENQUIRY_TO = ["gm.vpolishchuk@gmail.com", "zajbermatjaz@gmail.com"];
-// Resend's shared test sender; it can only deliver to the Resend account owner's
-// address. Replace with an address on a verified domain to send to everyone above.
-const ENQUIRY_FROM = "Villa enquiries <onboarding@resend.dev>";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -43,9 +41,10 @@ export async function sendEnquiry(formData: FormData): Promise<EnquiryResult> {
     return { ok: false, error: quote.error };
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.error("RESEND_API_KEY is not set");
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
+  if (!gmailUser || !gmailAppPassword) {
+    console.error("GMAIL_USER or GMAIL_APP_PASSWORD is not set");
     return { ok: false, error: "Sending is not configured yet. Please try again later." };
   }
 
@@ -63,23 +62,21 @@ export async function sendEnquiry(formData: FormData): Promise<EnquiryResult> {
     message || "(none)",
   ].join("\n");
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: ENQUIRY_FROM,
-      to: ENQUIRY_TO,
-      reply_to: email,
-      subject: `Stay request: ${checkIn} → ${checkOut}, ${name}`,
-      text,
-    }),
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: { user: gmailUser, pass: gmailAppPassword },
   });
 
-  if (!response.ok) {
-    console.error("Resend error", response.status, await response.text());
+  try {
+    await transporter.sendMail({
+      from: { name: "Villa enquiries", address: gmailUser },
+      to: ENQUIRY_TO,
+      replyTo: { name, address: email },
+      subject: `Stay request: ${checkIn} → ${checkOut}, ${name}`,
+      text,
+    });
+  } catch (err) {
+    console.error("Gmail send error", err);
     return { ok: false, error: "Something went wrong sending your request. Please try again." };
   }
 
