@@ -20,6 +20,17 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Enquiry emails
+
+The reservation form sends each request by email through [Resend](https://resend.com) (free tier: 3,000 emails/month). The recipients and sender are set in `src/app/actions.ts`.
+
+1. Sign up at Resend and create an API key. To deliver to more than the account owner's address, [verify a domain](https://resend.com/domains) and set `ENQUIRY_FROM` to an address on it.
+2. Add it to `.env.local` locally, and to your host's environment variables in production:
+
+   ```bash
+   RESEND_API_KEY=re_xxxxxxxx
+   ```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

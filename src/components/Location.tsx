@@ -1,4 +1,8 @@
-import { distances } from "@/lib/content";
+import { distances, villa } from "@/lib/content";
+
+const { lat, lng } = villa.coordinates;
+const { name: placeName, featureId, url: mapsLink } = villa.mapsPlace;
+const mapsEmbedSrc = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d100000!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s${encodeURIComponent(featureId)}!2s${encodeURIComponent(placeName)}!5e0!3m2!1sen!2shr`;
 
 export function Location() {
   return (
@@ -27,13 +31,23 @@ export function Location() {
               </li>
             ))}
           </ul>
+          <a
+            href={mapsLink}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-6 inline-block text-sm tracking-wide text-gold-deep underline-offset-4 hover:underline"
+          >
+            Open in Google Maps
+          </a>
         </div>
         <div className="min-h-[360px] overflow-hidden rounded-3xl">
           <iframe
-            title="Map of Matohanci near Rovinj"
+            title="Google Map of Villa Lim Silent"
             className="h-full min-h-[360px] w-full border-0"
-            src="https://www.openstreetmap.org/export/embed.html?bbox=13.70%2C45.10%2C13.85%2C45.18&layer=mapnik&marker=45.145%2C13.755"
+            src={mapsEmbedSrc}
             loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
           />
         </div>
       </div>

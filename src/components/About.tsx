@@ -36,26 +36,29 @@ export function About() {
       <div className="grid gap-4">
         <div className="relative min-h-[280px] overflow-hidden rounded-3xl">
           <Image
-            src="/gallery/photo-04.jpg"
+            src="/sections/house-1.jpg"
             alt="Heated pool from the sun deck"
             fill
+            sizes="(min-width: 768px) 560px, 100vw"
             className="object-cover"
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="relative min-h-[180px] overflow-hidden rounded-3xl">
             <Image
-              src="/gallery/photo-06.jpg"
+              src="/sections/house-2.jpg"
               alt="Outdoor dining terrace"
               fill
+              sizes="(min-width: 768px) 280px, 50vw"
               className="object-cover"
             />
           </div>
           <div className="relative min-h-[180px] overflow-hidden rounded-3xl">
             <Image
-              src="/gallery/photo-07.jpg"
+              src="/sections/house-3.jpg"
               alt="Living room with garden doors"
               fill
+              sizes="(min-width: 768px) 280px, 50vw"
               className="object-cover"
             />
           </div>

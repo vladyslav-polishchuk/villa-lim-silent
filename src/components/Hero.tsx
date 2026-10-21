@@ -5,7 +5,7 @@ export function Hero() {
   return (
     <section id="top" className="relative min-h-[92vh]">
       <Image
-        src="/gallery/hero.jpg"
+        src="/sections/hero.jpg"
         alt="Villa Lim Silent with heated pool at dusk"
         fill
         priority
