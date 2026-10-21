@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/dictionaries";
-import { hasLocale, locales } from "@/lib/i18n";
+import { siteUrl, villa } from "@/lib/content";
+import { defaultLocale, hasLocale, intlLocales, locales } from "@/lib/i18n";
 import "../globals.css";
 
 const sans = Outfit({
@@ -27,11 +28,37 @@ export async function generateMetadata({
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
   return {
+    metadataBase: new URL(siteUrl),
     title: dict.meta.title,
     description: dict.meta.description,
+    applicationName: villa.name,
     alternates: {
       canonical: `/${lang}`,
-      languages: Object.fromEntries(locales.map((l) => [l, `/${l}`])),
+      languages: {
+        ...Object.fromEntries(locales.map((l) => [l, `/${l}`])),
+        "x-default": `/${defaultLocale}`,
+      },
+    },
+    openGraph: {
+      type: "website",
+      siteName: villa.name,
+      title: dict.meta.title,
+      description: dict.meta.description,
+      url: `/${lang}`,
+      locale: intlLocales[lang].replace("-", "_"),
+      alternateLocale: locales
+        .filter((l) => l !== lang)
+        .map((l) => intlLocales[l].replace("-", "_")),
+      images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: dict.hero.imageAlt }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: dict.meta.title,
+      description: dict.meta.description,
+      images: ["/og-image.jpg"],
+    },
+    verification: {
+      google: process.env.GOOGLE_SITE_VERIFICATION,
     },
   };
 }
