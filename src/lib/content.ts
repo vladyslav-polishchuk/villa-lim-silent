@@ -2,6 +2,16 @@ export const villa = {
   name: "Villa Lim Silent",
   location: "Matohanci, Rovinj",
   country: "Croatia",
+  coordinates: {
+    lat: 45.1112099,
+    lng: 13.7551098,
+    label: `45°06'40.4"N 13°45'18.3"E`,
+  },
+  mapsPlace: {
+    name: "Villa with heated pool, patio & grill",
+    featureId: "0x477cb9b263e8efe5:0x13772ba58561efcf",
+    url: "https://www.google.com/maps/place/Villa+with+heated+pool,+patio+%26+grill/@45.1112099,13.7551098,17z/data=!3m1!4b1!4m6!3m5!1s0x477cb9b263e8efe5:0x13772ba58561efcf!8m2!3d45.1112099!4d13.7551098!16s%2Fg%2F11xkgcvrvz",
+  },
   rating: "5.0",
   reviewCount: 17,
   guests: 6,
