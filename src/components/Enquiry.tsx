@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState, useTransition } from "react";
+import { sendEnquiry } from "@/app/actions";
 import {
   formatDateRange,
   quoteStay,
@@ -13,12 +14,23 @@ export function Enquiry() {
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState("2");
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
   const quote = useMemo(() => quoteStay(checkIn, checkOut), [checkIn, checkOut]);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSent(true);
+    const formData = new FormData(event.currentTarget);
+    setError(null);
+    startTransition(async () => {
+      const result = await sendEnquiry(formData);
+      if (result.ok) {
+        setSent(true);
+      } else {
+        setError(result.error);
+      }
+    });
   }
 
   return (
@@ -63,8 +75,8 @@ export function Enquiry() {
         {sent ? (
           <div className="flex items-center rounded-3xl bg-white/5 p-10">
             <p className="font-serif text-3xl text-white">
-              Thank you. Your request is noted for this preview — a live booking
-              inbox can be wired next.
+              Thank you. Your request has been sent — we&apos;ll reply by email
+              shortly.
             </p>
           </div>
         ) : (
@@ -78,6 +90,7 @@ export function Enquiry() {
                 <input
                   required
                   type="date"
+                  name="checkIn"
                   value={checkIn}
                   onChange={(e) => setCheckIn(e.target.value)}
                   className="rounded-xl border border-line px-3 py-3"
@@ -88,6 +101,7 @@ export function Enquiry() {
                 <input
                   required
                   type="date"
+                  name="checkOut"
                   value={checkOut}
                   onChange={(e) => setCheckOut(e.target.value)}
                   className="rounded-xl border border-line px-3 py-3"
@@ -97,6 +111,7 @@ export function Enquiry() {
             <label className="grid gap-2 text-sm">
               Guests
               <select
+                name="guests"
                 value={guests}
                 onChange={(e) => setGuests(e.target.value)}
                 className="rounded-xl border border-line px-3 py-3"
@@ -144,11 +159,17 @@ export function Enquiry() {
                 </p>
               )}
             </div>
+            {error && (
+              <p role="alert" className="text-sm text-red-700">
+                {error}
+              </p>
+            )}
             <button
               type="submit"
-              className="rounded-full bg-ink px-6 py-3.5 text-cream hover:bg-gold-deep"
+              disabled={pending}
+              className="rounded-full bg-ink px-6 py-3.5 text-cream hover:bg-gold-deep disabled:opacity-60"
             >
-              Send request
+              {pending ? "Sending…" : "Send request"}
             </button>
           </form>
         )}
