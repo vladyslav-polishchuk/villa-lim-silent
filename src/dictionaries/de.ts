@@ -175,23 +175,11 @@ export const de: Dictionary = {
   reviews: {
     eyebrow: "Gemeinsame Momente",
     title: "{rating} aus {count} Gästebewertungen",
-    items: [
-      {
-        name: "Alexandra R.",
-        date: "September 2026",
-        text: "Ein privates Haus am Dorfrand mit einem Pool, der bis in den frühen Abend in der Sonne liegt. Die Ausstattung ist komplett, einschließlich Insektenschutzgittern, und Rovinj ist nah, wenn man in die Stadt möchte. Gastgeber Matjaž hat uns persönlich empfangen – es fühlte sich an, als wären wir bei Freunden zu Gast.",
-      },
-      {
-        name: "Daniel R.",
-        date: "August 2026",
-        text: "Alles war perfekt.",
-      },
-      {
-        name: "Vladyslav P.",
-        date: "August 2026",
-        text: "Modern, in Wirklichkeit größer als auf den Fotos und tadellos gepflegt. Der Garten ist vollständig eingezäunt, sodass unser Hund ohne Leine herumlaufen konnte. Obst, Kaffee und Wein warteten zur Begrüßung, und der Gastgeber war vor, während und nach dem Aufenthalt erreichbar – inklusive E-Auto-Laden an der Villa.",
-      },
-    ],
+    carouselLabel: "Gästebewertungen",
+    previous: "Vorherige Bewertungen",
+    next: "Nächste Bewertungen",
+    readMore: "Weiterlesen",
+    showLess: "Weniger anzeigen",
   },
   location: {
     eyebrow: "Auf der Karte",

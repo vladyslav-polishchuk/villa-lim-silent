@@ -175,23 +175,11 @@ export const en = {
   reviews: {
     eyebrow: "Shared moments",
     title: "{rating} from {count} guest reviews",
-    items: [
-      {
-        name: "Alexandra R.",
-        date: "September 2026",
-        text: "A private house on the edge of the village, with a pool that stays in the sun until early evening. The technical setup is complete, including insect screens, and Rovinj is close when you want the town. Host Matjaž greeted us in person — it felt like staying with friends.",
-      },
-      {
-        name: "Daniel R.",
-        date: "August 2026",
-        text: "Everything was perfect.",
-      },
-      {
-        name: "Vladyslav P.",
-        date: "August 2026",
-        text: "Modern, larger in person than in photos, and meticulously kept. The garden is fully fenced, so our dog could roam off-leash. Welcome fruit, coffee, and wine were waiting, and the host stayed in touch before, during, and after the stay — including EV charging at the villa.",
-      },
-    ],
+    carouselLabel: "Guest reviews",
+    previous: "Previous reviews",
+    next: "Next reviews",
+    readMore: "Read more",
+    showLess: "Show less",
   },
   location: {
     eyebrow: "On the map",
