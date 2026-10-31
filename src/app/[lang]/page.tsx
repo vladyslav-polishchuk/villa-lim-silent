@@ -13,11 +13,12 @@ import { Rooms } from "@/components/Rooms";
 import { getDictionary } from "@/dictionaries";
 import { formatPrice, gallery, siteUrl, villa } from "@/lib/content";
 import { hasLocale, locales } from "@/lib/i18n";
+import { getAvailability } from "@/lib/istria-lux";
 
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
-  const dict = await getDictionary(lang);
+  const [dict, availability] = await Promise.all([getDictionary(lang), getAvailability()]);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -80,7 +81,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <Gallery t={dict.gallery} />
         <Reviews lang={lang} t={dict.reviews} />
         <Location lang={lang} t={dict.location} />
-        <Enquiry lang={lang} t={dict.enquiry} />
+        <Enquiry lang={lang} t={dict.enquiry} availability={availability} />
       </main>
       <Footer t={dict.footer} />
     </>

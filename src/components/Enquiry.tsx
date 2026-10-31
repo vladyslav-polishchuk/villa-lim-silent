@@ -3,7 +3,9 @@
 import { FormEvent, useMemo, useState, useTransition } from "react";
 import { sendEnquiry } from "@/app/actions";
 import type { EnquiryError } from "@/app/actions";
+import { AvailabilityCalendar } from "@/components/AvailabilityCalendar";
 import type { Dictionary } from "@/dictionaries/en";
+import { checkAvailability, type Availability } from "@/lib/availability";
 import {
   formatDateRange,
   formatPrice,
@@ -13,7 +15,15 @@ import {
 } from "@/lib/content";
 import { fill, plural, type Locale } from "@/lib/i18n";
 
-export function Enquiry({ lang, t }: { lang: Locale; t: Dictionary["enquiry"] }) {
+export function Enquiry({
+  lang,
+  t,
+  availability,
+}: {
+  lang: Locale;
+  t: Dictionary["enquiry"];
+  availability: Availability | null;
+}) {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState("2");
@@ -22,6 +32,9 @@ export function Enquiry({ lang, t }: { lang: Locale; t: Dictionary["enquiry"] })
   const [pending, startTransition] = useTransition();
 
   const quote = useMemo(() => quoteStay(checkIn, checkOut), [checkIn, checkOut]);
+  const conflict =
+    availability && !quote.error ? checkAvailability(availability, checkIn, checkOut) : null;
+  const notice = quote.error ?? conflict;
   const nights = (count: number) => `${count} ${plural(lang, count, t.nights)}`;
   const errorText = (code: EnquiryError) =>
     code === "minStay"
@@ -91,6 +104,19 @@ export function Enquiry({ lang, t }: { lang: Locale; t: Dictionary["enquiry"] })
             className="grid gap-4 rounded-3xl bg-white p-6 text-ink md:p-8"
           >
             <input type="hidden" name="lang" value={lang} />
+            {availability && (
+              <AvailabilityCalendar
+                lang={lang}
+                t={t.calendar}
+                availability={availability}
+                checkIn={checkIn}
+                checkOut={checkOut}
+                onChange={(from, to) => {
+                  setCheckIn(from);
+                  setCheckOut(to);
+                }}
+              />
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm">
                 {t.checkIn}
@@ -157,8 +183,8 @@ export function Enquiry({ lang, t }: { lang: Locale; t: Dictionary["enquiry"] })
               />
             </label>
             <div className="rounded-2xl bg-cream px-4 py-4 text-sm">
-              {quote.error ? (
-                <p>{errorText(quote.error)}</p>
+              {notice ? (
+                <p>{errorText(notice)}</p>
               ) : (
                 <p>
                   {fill(t.estimate, { nights: nights(quote.nights) })}{" "}

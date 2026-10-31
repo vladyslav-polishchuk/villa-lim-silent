@@ -175,23 +175,11 @@ export const hr: Dictionary = {
   reviews: {
     eyebrow: "Zajednički trenuci",
     title: "{rating} iz {count} recenzija gostiju",
-    items: [
-      {
-        name: "Alexandra R.",
-        date: "Rujan 2026.",
-        text: "Privatna kuća na rubu sela, s bazenom koji je na suncu do ranih večernjih sati. Tehnička opremljenost je potpuna, uključujući mreže protiv komaraca, a Rovinj je blizu kad vam se ide u grad. Domaćin Matjaž dočekao nas je osobno — osjećali smo se kao da smo u gostima kod prijatelja.",
-      },
-      {
-        name: "Daniel R.",
-        date: "Kolovoz 2026.",
-        text: "Sve je bilo savršeno.",
-      },
-      {
-        name: "Vladyslav P.",
-        date: "Kolovoz 2026.",
-        text: "Moderna, uživo veća nego na fotografijama i besprijekorno održavana. Vrt je potpuno ograđen pa je naš pas mogao slobodno trčati bez povodca. Dočekali su nas voće, kava i vino, a domaćin je bio u kontaktu prije, tijekom i nakon boravka — uključujući punjenje električnog automobila u vili.",
-      },
-    ],
+    carouselLabel: "Recenzije gostiju",
+    previous: "Prethodne recenzije",
+    next: "Sljedeće recenzije",
+    readMore: "Pročitaj više",
+    showLess: "Prikaži manje",
   },
   location: {
     eyebrow: "Na karti",
@@ -227,10 +215,22 @@ export const hr: Dictionary = {
     estimate: "{nights} · procijenjeni ukupni iznos",
     sending: "Slanje…",
     send: "Pošalji upit",
+    calendar: {
+      previous: "Prethodni mjesec",
+      next: "Sljedeći mjesec",
+      pickArrival: "Odaberite dan dolaska",
+      pickDeparture: "Odaberite dan odlaska",
+      available: "Slobodno",
+      booked: "Zauzeto",
+      selected: "Vaši datumi",
+    },
     errors: {
       noDates: "Odaberite datum dolaska i odlaska.",
       outOfSeason: "Odabrani datumi su izvan objavljene sezone.",
       minStay: "Minimalni boravak za ove datume je {nights}.",
+      unavailable: "Vila je već rezervirana za neke od ovih noći.",
+      noArrival: "Dolazak nije moguć na taj dan.",
+      noDeparture: "Odlazak nije moguć na taj dan.",
       invalidDates: "Odaberite valjane datume.",
       invalidGuests: "Odaberite valjan broj gostiju.",
       missingName: "Unesite svoje ime.",

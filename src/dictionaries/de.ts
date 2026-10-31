@@ -175,23 +175,11 @@ export const de: Dictionary = {
   reviews: {
     eyebrow: "Gemeinsame Momente",
     title: "{rating} aus {count} Gästebewertungen",
-    items: [
-      {
-        name: "Alexandra R.",
-        date: "September 2026",
-        text: "Ein privates Haus am Dorfrand mit einem Pool, der bis in den frühen Abend in der Sonne liegt. Die Ausstattung ist komplett, einschließlich Insektenschutzgittern, und Rovinj ist nah, wenn man in die Stadt möchte. Gastgeber Matjaž hat uns persönlich empfangen – es fühlte sich an, als wären wir bei Freunden zu Gast.",
-      },
-      {
-        name: "Daniel R.",
-        date: "August 2026",
-        text: "Alles war perfekt.",
-      },
-      {
-        name: "Vladyslav P.",
-        date: "August 2026",
-        text: "Modern, in Wirklichkeit größer als auf den Fotos und tadellos gepflegt. Der Garten ist vollständig eingezäunt, sodass unser Hund ohne Leine herumlaufen konnte. Obst, Kaffee und Wein warteten zur Begrüßung, und der Gastgeber war vor, während und nach dem Aufenthalt erreichbar – inklusive E-Auto-Laden an der Villa.",
-      },
-    ],
+    carouselLabel: "Gästebewertungen",
+    previous: "Vorherige Bewertungen",
+    next: "Nächste Bewertungen",
+    readMore: "Weiterlesen",
+    showLess: "Weniger anzeigen",
   },
   location: {
     eyebrow: "Auf der Karte",
@@ -227,10 +215,22 @@ export const de: Dictionary = {
     estimate: "{nights} · geschätzter Gesamtpreis",
     sending: "Wird gesendet…",
     send: "Anfrage senden",
+    calendar: {
+      previous: "Vorheriger Monat",
+      next: "Nächster Monat",
+      pickArrival: "Wählen Sie Ihren Anreisetag",
+      pickDeparture: "Wählen Sie Ihren Abreisetag",
+      available: "Frei",
+      booked: "Belegt",
+      selected: "Ihre Daten",
+    },
     errors: {
       noDates: "Bitte wählen Sie An- und Abreise.",
       outOfSeason: "Diese Daten liegen außerhalb der veröffentlichten Saison.",
       minStay: "Der Mindestaufenthalt für diesen Zeitraum beträgt {nights}.",
+      unavailable: "Die Villa ist für einige dieser Nächte bereits belegt.",
+      noArrival: "An diesem Tag ist keine Anreise möglich.",
+      noDeparture: "An diesem Tag ist keine Abreise möglich.",
       invalidDates: "Bitte wählen Sie gültige Daten.",
       invalidGuests: "Bitte wählen Sie eine gültige Gästezahl.",
       missingName: "Bitte geben Sie Ihren Namen ein.",

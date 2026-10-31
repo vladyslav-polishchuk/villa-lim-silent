@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/dictionaries";
 import { siteUrl, villa } from "@/lib/content";
@@ -49,7 +50,14 @@ export async function generateMetadata({
       alternateLocale: locales
         .filter((l) => l !== lang)
         .map((l) => intlLocales[l].replace("-", "_")),
-      images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: dict.hero.imageAlt }],
+      images: [
+        {
+          url: "/og-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: dict.hero.imageAlt,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
@@ -75,7 +83,10 @@ export default async function RootLayout({
       lang={lang}
       className={`${sans.variable} ${serif.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-paper font-sans text-ink">{children}</body>
+      <body className="min-h-full bg-paper font-sans text-ink">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

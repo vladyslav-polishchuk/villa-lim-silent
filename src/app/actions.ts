@@ -1,8 +1,10 @@
 "use server";
 
 import nodemailer from "nodemailer";
+import { checkAvailability, type AvailabilityError } from "@/lib/availability";
 import { formatDateRange, quoteStay, villa, type QuoteError } from "@/lib/content";
 import { defaultLocale, hasLocale, localeNames } from "@/lib/i18n";
+import { getAvailability } from "@/lib/istria-lux";
 
 const ENQUIRY_TO = ["gm.vpolishchuk@gmail.com", "zajbermatjaz@gmail.com"];
 
@@ -11,6 +13,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type EnquiryError =
   | QuoteError
+  | AvailabilityError
   | "invalidDates"
   | "invalidGuests"
   | "missingName"
@@ -51,6 +54,12 @@ export async function sendEnquiry(formData: FormData): Promise<EnquiryResult> {
   const quote = quoteStay(checkIn, checkOut);
   if (quote.error) {
     return { ok: false, error: quote.error };
+  }
+
+  const availability = await getAvailability();
+  const conflict = availability && checkAvailability(availability, checkIn, checkOut);
+  if (conflict) {
+    return { ok: false, error: conflict };
   }
 
   const gmailUser = process.env.GMAIL_USER;
