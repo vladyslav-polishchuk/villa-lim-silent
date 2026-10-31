@@ -58,7 +58,7 @@ export function Enquiry({
   return (
     <section id="enquire" className="bg-ink text-cream">
       <div className="mx-auto grid max-w-6xl gap-12 px-5 py-20 md:grid-cols-[0.9fr_1.1fr] md:px-8 md:py-24">
-        <div>
+        <div className="lg:flex lg:flex-col">
           <p className="text-xs tracking-[0.28em] text-gold uppercase">
             {t.eyebrow}
           </p>
@@ -68,8 +68,8 @@ export function Enquiry({
           <p className="mt-5 leading-8 text-white/70">
             {fill(t.intro, { price: formatPrice(villa.fromPrice, lang) })}
           </p>
-          <div className="mt-8 max-h-[320px] overflow-auto rounded-2xl border border-white/10">
-            <table className="w-full text-left text-sm">
+          <div className="mt-8 rounded-2xl border border-white/10 lg:flex-1">
+            <table className="w-full text-left text-sm lg:h-full">
               <thead className="text-gold">
                 <tr>
                   <th className="px-4 py-3 font-medium">{t.table.dates}</th>
@@ -101,46 +101,51 @@ export function Enquiry({
         ) : (
           <form
             onSubmit={onSubmit}
-            className="grid gap-4 rounded-3xl bg-white p-6 text-ink md:p-8"
+            className="flex flex-col gap-4 self-start rounded-3xl bg-white p-6 text-ink md:p-8 lg:self-stretch"
           >
             <input type="hidden" name="lang" value={lang} />
-            {availability && (
-              <AvailabilityCalendar
-                lang={lang}
-                t={t.calendar}
-                availability={availability}
-                checkIn={checkIn}
-                checkOut={checkOut}
-                onChange={(from, to) => {
-                  setCheckIn(from);
-                  setCheckOut(to);
-                }}
-              />
+            {availability ? (
+              <>
+                <AvailabilityCalendar
+                  lang={lang}
+                  t={t.calendar}
+                  availability={availability}
+                  checkIn={checkIn}
+                  checkOut={checkOut}
+                  onChange={(from, to) => {
+                    setCheckIn(from);
+                    setCheckOut(to);
+                  }}
+                />
+                <input type="hidden" name="checkIn" value={checkIn} />
+                <input type="hidden" name="checkOut" value={checkOut} />
+              </>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm">
+                  {t.checkIn}
+                  <input
+                    required
+                    type="date"
+                    name="checkIn"
+                    value={checkIn}
+                    onChange={(e) => setCheckIn(e.target.value)}
+                    className="rounded-xl border border-line px-3 py-3"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm">
+                  {t.checkOut}
+                  <input
+                    required
+                    type="date"
+                    name="checkOut"
+                    value={checkOut}
+                    onChange={(e) => setCheckOut(e.target.value)}
+                    className="rounded-xl border border-line px-3 py-3"
+                  />
+                </label>
+              </div>
             )}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-2 text-sm">
-                {t.checkIn}
-                <input
-                  required
-                  type="date"
-                  name="checkIn"
-                  value={checkIn}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  className="rounded-xl border border-line px-3 py-3"
-                />
-              </label>
-              <label className="grid gap-2 text-sm">
-                {t.checkOut}
-                <input
-                  required
-                  type="date"
-                  name="checkOut"
-                  value={checkOut}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  className="rounded-xl border border-line px-3 py-3"
-                />
-              </label>
-            </div>
             <label className="grid gap-2 text-sm">
               {t.guestsLabel}
               <select
@@ -161,7 +166,7 @@ export function Enquiry({
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm">
                 {t.name}
-                <input required name="name" className="rounded-xl border border-line px-3 py-3" />
+                <input required name="name" className="min-w-0 rounded-xl border border-line px-3 py-3" />
               </label>
               <label className="grid gap-2 text-sm">
                 {t.email}
@@ -169,7 +174,7 @@ export function Enquiry({
                   required
                   type="email"
                   name="email"
-                  className="rounded-xl border border-line px-3 py-3"
+                  className="min-w-0 rounded-xl border border-line px-3 py-3"
                 />
               </label>
             </div>
@@ -182,11 +187,12 @@ export function Enquiry({
                 placeholder={t.messagePlaceholder}
               />
             </label>
-            <div className="rounded-2xl bg-cream px-4 py-4 text-sm">
+            <div className="mt-auto rounded-2xl bg-cream px-4 py-4 text-sm">
               {notice ? (
                 <p>{errorText(notice)}</p>
               ) : (
                 <p>
+                  {formatDateRange(checkIn, checkOut, lang)} ·{" "}
                   {fill(t.estimate, { nights: nights(quote.nights) })}{" "}
                   <strong>{formatPrice(quote.total, lang)}</strong>
                 </p>
@@ -199,7 +205,7 @@ export function Enquiry({
             )}
             <button
               type="submit"
-              disabled={pending}
+              disabled={pending || Boolean(notice)}
               className="rounded-full bg-ink px-6 py-3.5 text-cream hover:bg-gold-deep disabled:opacity-60"
             >
               {pending ? t.sending : t.send}

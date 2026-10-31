@@ -69,8 +69,8 @@ export function AvailabilityCalendar({ lang, t, availability, checkIn, checkOut,
   const months = [month, monthStart(month, 1)];
 
   return (
-    <div className="rounded-2xl border border-line p-4">
-      <div className="flex items-center justify-between">
+    <div className="relative rounded-2xl border border-line p-4">
+      <div className="absolute inset-x-4 top-4 z-10 flex items-center justify-between">
         <button
           type="button"
           onClick={() => setMonth(monthStart(month, -1))}
@@ -80,7 +80,7 @@ export function AvailabilityCalendar({ lang, t, availability, checkIn, checkOut,
         >
           ‹
         </button>
-        <p className="text-sm text-ink-soft">{pickingDeparture ? t.pickDeparture : t.pickArrival}</p>
+        <p className="sr-only">{pickingDeparture ? t.pickDeparture : t.pickArrival}</p>
         <button
           type="button"
           onClick={() => setMonth(monthStart(month, 1))}
@@ -92,10 +92,10 @@ export function AvailabilityCalendar({ lang, t, availability, checkIn, checkOut,
         </button>
       </div>
 
-      <div className="mt-3 grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
         {months.map((first, index) => (
           <div key={first} className={index > 0 ? "hidden xl:block" : undefined}>
-            <p className="text-center font-serif text-lg capitalize">
+            <p className="py-1 text-center font-serif text-lg capitalize">
               {monthLabel.format(new Date(`${first}T12:00:00Z`))}
             </p>
             <div className="mt-2 grid grid-cols-7 text-center text-[11px] text-ink-soft">
