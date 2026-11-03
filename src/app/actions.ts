@@ -5,6 +5,7 @@ import { checkAvailability, type AvailabilityError } from "@/lib/availability";
 import { formatDateRange, quoteStay, villa, type QuoteError } from "@/lib/content";
 import { defaultLocale, hasLocale, localeNames } from "@/lib/i18n";
 import { getAvailability } from "@/lib/istria-lux";
+import { getRates } from "@/lib/rates";
 
 const ENQUIRY_TO = ["gm.vpolishchuk@gmail.com", "zajbermatjaz@gmail.com"];
 
@@ -51,7 +52,8 @@ export async function sendEnquiry(formData: FormData): Promise<EnquiryResult> {
     return { ok: false, error: "invalidEmail" };
   }
 
-  const quote = quoteStay(checkIn, checkOut);
+  // Quote on the server from the sheet rates; never trust a total sent by the browser.
+  const quote = quoteStay(checkIn, checkOut, await getRates());
   if (quote.error) {
     return { ok: false, error: quote.error };
   }

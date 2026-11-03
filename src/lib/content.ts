@@ -34,7 +34,6 @@ export const villa = {
   checkIn: "16:00",
   checkOut: "10:00",
   pets: 1,
-  fromPrice: 170,
 };
 
 export const gallery = Array.from(
@@ -45,15 +44,26 @@ export const gallery = Array.from(
 export type Rate = {
   start: string;
   end: string;
+  /** Regular nightly price. */
   price: number;
   minNights: number;
+  /** Lower nightly price that replaces `price` when set (always below `price`). */
+  discountedPrice?: number;
+  /** Shown as a tooltip next to the discounted price. */
+  description?: string;
 };
 
+/** The nightly price a guest actually pays for this season. */
+export function effectivePrice(rate: Rate) {
+  return rate.discountedPrice ?? rate.price;
+}
+
+// Built-in fallback used only when the Google Sheet (see src/lib/rates.ts) cannot be loaded.
+// Keep it in step with the sheet; the sheet is the source of truth.
 export const rates: Rate[] = [
-  { start: "2026-09-19", end: "2026-10-31", price: 194, minNights: 7 },
-  { start: "2026-10-31", end: "2026-12-01", price: 170, minNights: 5 },
   { start: "2027-03-27", end: "2027-04-01", price: 194, minNights: 7 },
-  { start: "2027-04-01", end: "2027-05-29", price: 295, minNights: 7 },
+  { start: "2027-04-01", end: "2027-05-15", price: 295, minNights: 7 },
+  { start: "2027-05-15", end: "2027-05-29", price: 295, minNights: 7 },
   { start: "2027-05-29", end: "2027-06-05", price: 272.5, minNights: 7 },
   { start: "2027-06-05", end: "2027-07-03", price: 338.5, minNights: 7 },
   { start: "2027-07-03", end: "2027-07-17", price: 470.5, minNights: 7 },
@@ -98,7 +108,12 @@ export function formatRating(value: number, locale: Locale = defaultLocale) {
 
 export type QuoteError = "noDates" | "outOfSeason" | "minStay";
 
-export function quoteStay(from: string, to: string) {
+/** Lowest nightly price across all seasons, used for the "from €X" copy and structured data. */
+export function lowestPrice(seasons: Rate[]) {
+  return seasons.reduce((min, rate) => Math.min(min, effectivePrice(rate)), Infinity);
+}
+
+export function quoteStay(from: string, to: string, seasons: Rate[]) {
   const nights = nightsBetween(from, to);
   if (!from || !to || nights <= 0) {
     return { nights: 0, total: 0, minNights: 0, error: "noDates" as QuoteError };
@@ -111,7 +126,7 @@ export function quoteStay(from: string, to: string) {
 
   while (cursor < last) {
     const iso = cursor.toISOString().slice(0, 10);
-    const rate = rates.find((r) => iso >= r.start && iso < r.end);
+    const rate = seasons.find((r) => iso >= r.start && iso < r.end);
     if (!rate) {
       return {
         nights,
@@ -120,7 +135,7 @@ export function quoteStay(from: string, to: string) {
         error: "outOfSeason" as QuoteError,
       };
     }
-    total += rate.price;
+    total += effectivePrice(rate);
     minNights = Math.max(minNights, rate.minNights);
     cursor.setDate(cursor.getDate() + 1);
   }

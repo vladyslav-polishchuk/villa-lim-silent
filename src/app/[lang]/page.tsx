@@ -11,15 +11,20 @@ import { Location } from "@/components/Location";
 import { Reviews } from "@/components/Reviews";
 import { Rooms } from "@/components/Rooms";
 import { getDictionary } from "@/dictionaries";
-import { formatPrice, gallery, siteUrl, villa } from "@/lib/content";
+import { formatPrice, gallery, lowestPrice, siteUrl, villa } from "@/lib/content";
 import { hasLocale, locales } from "@/lib/i18n";
 import { getAvailability } from "@/lib/istria-lux";
+import { getRates } from "@/lib/rates";
 import { reviews } from "@/lib/reviews";
 
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
-  const [dict, availability] = await Promise.all([getDictionary(lang), getAvailability()]);
+  const [dict, availability, rates] = await Promise.all([
+    getDictionary(lang),
+    getAvailability(),
+    getRates(),
+  ]);
 
   const amenityFeature = [
     "Heated pool",
@@ -61,7 +66,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
     checkinTime: villa.checkIn,
     checkoutTime: villa.checkOut,
     petsAllowed: villa.pets > 0,
-    priceRange: `${formatPrice(villa.fromPrice, lang)}+`,
+    priceRange: `${formatPrice(lowestPrice(rates), lang)}+`,
     knowsLanguage: [...locales],
     aggregateRating: {
       "@type": "AggregateRating",
@@ -114,7 +119,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <Gallery t={dict.gallery} />
         <Reviews lang={lang} t={dict.reviews} />
         <Location lang={lang} t={dict.location} />
-        <Enquiry lang={lang} t={dict.enquiry} availability={availability} />
+        <Enquiry lang={lang} t={dict.enquiry} availability={availability} rates={rates} />
       </main>
       <Footer t={dict.footer} />
     </>
