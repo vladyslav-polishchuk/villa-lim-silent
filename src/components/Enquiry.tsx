@@ -9,9 +9,10 @@ import { checkAvailability, type Availability } from "@/lib/availability";
 import {
   formatDateRange,
   formatPrice,
+  lowestPrice,
   quoteStay,
-  rates,
   villa,
+  type Rate,
 } from "@/lib/content";
 import { fill, plural, type Locale } from "@/lib/i18n";
 
@@ -19,10 +20,12 @@ export function Enquiry({
   lang,
   t,
   availability,
+  rates,
 }: {
   lang: Locale;
   t: Dictionary["enquiry"];
   availability: Availability | null;
+  rates: Rate[];
 }) {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
@@ -31,7 +34,7 @@ export function Enquiry({
   const [error, setError] = useState<EnquiryError | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const quote = useMemo(() => quoteStay(checkIn, checkOut), [checkIn, checkOut]);
+  const quote = useMemo(() => quoteStay(checkIn, checkOut, rates), [checkIn, checkOut, rates]);
   const conflict =
     availability && !quote.error ? checkAvailability(availability, checkIn, checkOut) : null;
   const notice = quote.error ?? conflict;
@@ -66,7 +69,7 @@ export function Enquiry({
             {t.title}
           </h2>
           <p className="mt-5 leading-8 text-white/70">
-            {fill(t.intro, { price: formatPrice(villa.fromPrice, lang) })}
+            {fill(t.intro, { price: formatPrice(lowestPrice(rates), lang) })}
           </p>
           <div className="mt-8 rounded-2xl border border-white/10 lg:flex-1">
             <table className="w-full text-left text-sm lg:h-full">
@@ -83,7 +86,31 @@ export function Enquiry({
                     <td className="px-4 py-3">
                       {formatDateRange(rate.start, rate.end, lang)}
                     </td>
-                    <td className="px-4 py-3">{formatPrice(rate.price, lang)}</td>
+                    <td className="px-4 py-3">
+                      {rate.discountedPrice === undefined ? (
+                        formatPrice(rate.price, lang)
+                      ) : (
+                        <span
+                          tabIndex={rate.description ? 0 : undefined}
+                          aria-describedby={rate.description ? `rate-tip-${rate.start}` : undefined}
+                          className="group relative inline-flex items-baseline gap-2 outline-none"
+                        >
+                          <s className="text-white/45">{formatPrice(rate.price, lang)}</s>
+                          <span className="font-medium text-gold">
+                            {formatPrice(rate.discountedPrice, lang)}
+                          </span>
+                          {rate.description && (
+                            <span
+                              id={`rate-tip-${rate.start}`}
+                              role="tooltip"
+                              className="pointer-events-none absolute bottom-full left-0 z-10 mb-2 w-max max-w-64 rounded-lg bg-white px-3 py-2 text-xs leading-5 text-ink opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus:opacity-100"
+                            >
+                              {rate.description}
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">{nights(rate.minNights)}</td>
                   </tr>
                 ))}
