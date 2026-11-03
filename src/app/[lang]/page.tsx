@@ -74,8 +74,10 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
     hasMap: villa.mapsPlace.url,
     address: {
       "@type": "PostalAddress",
+      streetAddress: "4Q64+F2",
       addressLocality: "Matohanci",
       addressRegion: "Istria",
+      postalCode: "52352",
       addressCountry: "HR",
     },
     checkinTime: villa.checkIn,
