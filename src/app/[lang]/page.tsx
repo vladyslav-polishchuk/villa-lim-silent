@@ -14,11 +14,21 @@ import { getDictionary } from "@/dictionaries";
 import { formatPrice, gallery, siteUrl, villa } from "@/lib/content";
 import { hasLocale, locales } from "@/lib/i18n";
 import { getAvailability } from "@/lib/istria-lux";
+import { reviews } from "@/lib/reviews";
 
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const [dict, availability] = await Promise.all([getDictionary(lang), getAvailability()]);
+
+  const amenityFeature = [
+    "Heated pool",
+    "Air conditioning",
+    "Free Wi-Fi",
+    "Private parking",
+    "Barbecue",
+    "Fenced garden",
+  ].map((name) => ({ "@type": "LocationFeatureSpecification", name, value: true }));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -49,15 +59,22 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       ratingCount: villa.reviewCount,
       bestRating: 5,
     },
-    amenityFeature: ["Heated pool", "Air conditioning", "Free Wi-Fi", "Private parking", "Barbecue", "Fenced garden"].map(
-      (name) => ({ "@type": "LocationFeatureSpecification", name, value: true }),
-    ),
+    additionalType: "Villa",
+    review: reviews.slice(0, 10).map((r) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: r.name },
+      datePublished: r.month,
+      reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5 },
+      reviewBody: r.text,
+    })),
+    amenityFeature,
     containsPlace: {
       "@type": "Accommodation",
       additionalType: "EntirePlace",
       numberOfBedrooms: villa.bedrooms,
       numberOfBathroomsTotal: villa.bathrooms,
-      occupancy: { "@type": "QuantitativeValue", maxValue: villa.guests },
+      occupancy: { "@type": "QuantitativeValue", value: villa.guests, maxValue: villa.guests },
+      amenityFeature,
       floorSize: { "@type": "QuantitativeValue", value: villa.livingArea, unitCode: "MTK" },
       bed: { "@type": "BedDetails", numberOfBeds: villa.bedrooms, typeOfBed: "King" },
     },
