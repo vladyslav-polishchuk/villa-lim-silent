@@ -30,6 +30,16 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
     "Fenced garden",
   ].map((name) => ({ "@type": "LocationFeatureSpecification", name, value: true }));
 
+  // Tells Google the site name (shown above the URL in results) and its root URL.
+  const webSiteLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${siteUrl}/#website`,
+    name: villa.name,
+    alternateName: "Villa Lim Silent Rovinj",
+    url: `${siteUrl}/`,
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "VacationRental",
@@ -86,6 +96,12 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(webSiteLd).replace(/</g, "\\u003c"),
         }}
       />
       <Header lang={lang} t={dict.header} />
