@@ -40,7 +40,8 @@ The owner edits prices in a Google Sheet; the site reads it as CSV and refreshes
 - Format `start`, `end` and the price columns as **Plain text** so dates stay `YYYY-MM-DD` and prices keep a `.` decimal.
 - Set `RATES_SHEET_URL` (locally in `.env.local`, and in the host's environment variables) to `https://docs.google.com/spreadsheets/d/<SHEET_ID>/export?format=csv&gid=<TAB_GID>`. Share the sheet as "Anyone with the link: Viewer" and keep edit access limited to the owner.
 - After changing `.env.local`, restart `npm run dev`; the server only reads it at startup.
-- If the sheet is unreachable or a row is invalid (bad date, overlapping seasons, ...), the site logs the problem and uses the fallback list in `src/lib/content.ts`.
+- The sheet is the only source of prices. While it loads the reservation section shows a loading state; if it is unreachable or a row is invalid (bad date, overlapping seasons, ...), the section shows "Prices are unavailable" and the problem is logged (`Rates sheet unavailable: ...`). A failure is retried within about 15 seconds.
+- `RATES_SHEET_URL` can be either the CSV export link or the normal browser link of the sheet (`.../d/<id>/edit?gid=0`); the app converts it to the CSV export link.
 
 ## Learn More
 

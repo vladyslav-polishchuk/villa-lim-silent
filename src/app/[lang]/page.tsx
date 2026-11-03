@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { About } from "@/components/About";
 import { Amenities } from "@/components/Amenities";
-import { Enquiry } from "@/components/Enquiry";
+import { EnquirySection } from "@/components/EnquirySection";
+import { EnquiryStatus } from "@/components/EnquiryStatus";
 import { Footer } from "@/components/Footer";
 import { Gallery } from "@/components/Gallery";
 import { Header } from "@/components/Header";
@@ -12,19 +14,32 @@ import { Reviews } from "@/components/Reviews";
 import { Rooms } from "@/components/Rooms";
 import { getDictionary } from "@/dictionaries";
 import { formatPrice, gallery, lowestPrice, siteUrl, villa } from "@/lib/content";
-import { hasLocale, locales } from "@/lib/i18n";
+import { hasLocale, locales, type Locale } from "@/lib/i18n";
 import { getAvailability } from "@/lib/istria-lux";
 import { getRates } from "@/lib/rates";
 import { reviews } from "@/lib/reviews";
 
+// Adds the "from" price (taken from the sheet) to the structured data; without prices the field
+// is simply left out rather than guessed.
+async function VillaJsonLd({ data, lang }: { data: Record<string, unknown>; lang: Locale }) {
+  const rates = await getRates();
+  const withPrice = rates
+    ? { ...data, priceRange: `${formatPrice(lowestPrice(rates), lang)}+` }
+    : data;
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(withPrice).replace(/</g, "\\u003c"),
+      }}
+    />
+  );
+}
+
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
-  const [dict, availability, rates] = await Promise.all([
-    getDictionary(lang),
-    getAvailability(),
-    getRates(),
-  ]);
+  const [dict, availability] = await Promise.all([getDictionary(lang), getAvailability()]);
 
   const amenityFeature = [
     "Heated pool",
@@ -66,7 +81,6 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
     checkinTime: villa.checkIn,
     checkoutTime: villa.checkOut,
     petsAllowed: villa.pets > 0,
-    priceRange: `${formatPrice(lowestPrice(rates), lang)}+`,
     knowsLanguage: [...locales],
     aggregateRating: {
       "@type": "AggregateRating",
@@ -97,12 +111,9 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
+      <Suspense fallback={null}>
+        <VillaJsonLd data={jsonLd} lang={lang} />
+      </Suspense>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -119,7 +130,9 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <Gallery t={dict.gallery} />
         <Reviews lang={lang} t={dict.reviews} />
         <Location lang={lang} t={dict.location} />
-        <Enquiry lang={lang} t={dict.enquiry} availability={availability} rates={rates} />
+        <Suspense fallback={<EnquiryStatus status="loading" t={dict.enquiry} />}>
+          <EnquirySection lang={lang} t={dict.enquiry} availability={availability} />
+        </Suspense>
       </main>
       <Footer t={dict.footer} />
     </>

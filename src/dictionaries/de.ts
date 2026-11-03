@@ -237,7 +237,11 @@ export const de: Dictionary = {
       invalidEmail: "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
       notConfigured: "Der Versand ist noch nicht eingerichtet. Bitte versuchen Sie es später erneut.",
       sendFailed: "Beim Senden Ihrer Anfrage ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+      pricesUnavailable: "Die Preise konnten gerade nicht geladen werden. Bitte versuchen Sie es später erneut.",
     },
+    pricesLoading: "Aktuelle Preise werden geladen…",
+    pricesFailedTitle: "Preise nicht verfügbar",
+    pricesFailed: "Die Preise konnten gerade nicht abgerufen werden. Bitte versuchen Sie es in einigen Minuten erneut.",
   },
   notFound: {
     title: "Seite nicht gefunden",

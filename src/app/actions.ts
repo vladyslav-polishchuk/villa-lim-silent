@@ -20,6 +20,7 @@ export type EnquiryError =
   | "missingName"
   | "invalidEmail"
   | "notConfigured"
+  | "pricesUnavailable"
   | "sendFailed";
 
 export type EnquiryResult = { ok: true } | { ok: false; error: EnquiryError };
@@ -53,7 +54,11 @@ export async function sendEnquiry(formData: FormData): Promise<EnquiryResult> {
   }
 
   // Quote on the server from the sheet rates; never trust a total sent by the browser.
-  const quote = quoteStay(checkIn, checkOut, await getRates());
+  const rates = await getRates();
+  if (!rates) {
+    return { ok: false, error: "pricesUnavailable" };
+  }
+  const quote = quoteStay(checkIn, checkOut, rates);
   if (quote.error) {
     return { ok: false, error: quote.error };
   }

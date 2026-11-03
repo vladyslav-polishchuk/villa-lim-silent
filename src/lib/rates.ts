@@ -1,11 +1,24 @@
 import { cacheLife } from "next/cache";
-import { rates as fallbackRates, type Rate } from "@/lib/content";
+import type { Rate } from "@/lib/content";
 
 const MAX_DESCRIPTION_LENGTH = 200;
 
 // Only fetch the sheet over HTTPS from Google (Secure Node.js rule 7): the URL comes from an
-// environment variable, but we still refuse anything that is not a Google Sheets export link.
-const SHEET_URL_PREFIX = "https://docs.google.com/spreadsheets/";
+// environment variable, but we rebuild the request URL ourselves from the sheet id and tab.
+const SHEET_URL = /^https:\/\/docs\.google\.com\/spreadsheets\/d\/([A-Za-z0-9_-]+)/;
+const SHEET_GID = /[?#&]gid=(\d+)/;
+
+/**
+ * Accepts either the CSV export link or the plain browser link of the sheet
+ * (`.../d/<id>/edit?gid=0#gid=0`) and always returns the CSV export URL. The browser link returns
+ * an HTML page, which is the easiest mistake to make when pasting into an env var.
+ */
+export function toCsvUrl(url: string): string | null {
+  const id = SHEET_URL.exec(url.trim())?.[1];
+  if (!id || id === "e") return null; // "d/e/..." is a "published to web" link, not supported
+  const gid = SHEET_GID.exec(url)?.[1] ?? "0";
+  return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+}
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const PL_DATE = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
@@ -144,36 +157,38 @@ export function parseRates(csv: string): Rate[] {
 }
 
 /**
- * Seasonal rates edited by the owner in a Google Sheet (published as CSV via RATES_SHEET_URL).
- * Any failure falls back to the rates built into the code, so quotes keep working.
+ * Seasonal rates edited by the owner in a Google Sheet (RATES_SHEET_URL). The sheet is the only
+ * source of prices: returns `null` when it cannot be loaded or is invalid, and callers show a
+ * "prices unavailable" state instead of made-up numbers.
  */
-export async function getRates(): Promise<Rate[]> {
+export async function getRates(): Promise<Rate[] | null> {
   "use cache";
-  cacheLife({ stale: 60, revalidate: 300, expire: 86_400 });
-
-  const url = process.env.RATES_SHEET_URL;
-  if (!url) {
-    console.warn("RATES_SHEET_URL is not set, using built-in rates (restart the server after editing .env.local)");
-    return fallbackRates;
-  }
 
   // Never let this function throw: an error inside a "use cache" function fails the static
-  // prerender (and so the whole deploy), even when the caller catches it. A bad sheet must only
-  // mean "use the built-in rates until the next refresh".
+  // prerender (and so the whole deploy), even when the caller catches it.
   try {
-    if (!url.startsWith(SHEET_URL_PREFIX)) {
-      throw new Error("RATES_SHEET_URL must be a https://docs.google.com/spreadsheets/ link");
+    const raw = process.env.RATES_SHEET_URL;
+    if (!raw) throw new Error("RATES_SHEET_URL is not set (restart the server after editing .env.local)");
+    const url = toCsvUrl(raw);
+    if (!url) {
+      throw new Error("RATES_SHEET_URL must be a https://docs.google.com/spreadsheets/d/<id>/... link");
     }
+
     const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const contentType = res.headers.get("content-type") ?? "";
     if (!contentType.includes("text/csv")) {
-      // Typically a Google sign-in/consent page: the sheet is not shared as "Anyone with the link".
+      // Typically a Google sign-in page: the sheet is not shared as "Anyone with the link: Viewer".
       throw new Error(`sheet did not return CSV (content-type: ${contentType || "none"})`);
     }
-    return parseRates(await res.text());
+    const rates = parseRates(await res.text());
+
+    cacheLife({ stale: 60, revalidate: 300, expire: 86_400 });
+    return rates;
   } catch (err) {
-    console.error("Rates sheet unavailable, using built-in rates:", err instanceof Error ? err.message : err);
-    return fallbackRates;
+    console.error("Rates sheet unavailable:", err instanceof Error ? err.message : err);
+    // Keep a failure for seconds, not minutes, so the site recovers as soon as the sheet does.
+    cacheLife({ stale: 0, revalidate: 15, expire: 60 });
+    return null;
   }
 }
