@@ -148,30 +148,32 @@ export function parseRates(csv: string): Rate[] {
  * Any failure falls back to the rates built into the code, so quotes keep working.
  */
 export async function getRates(): Promise<Rate[]> {
+  "use cache";
+  cacheLife({ stale: 60, revalidate: 300, expire: 86_400 });
+
   const url = process.env.RATES_SHEET_URL;
   if (!url) {
     console.warn("RATES_SHEET_URL is not set, using built-in rates (restart the server after editing .env.local)");
     return fallbackRates;
   }
 
+  // Never let this function throw: an error inside a "use cache" function fails the static
+  // prerender (and so the whole deploy), even when the caller catches it. A bad sheet must only
+  // mean "use the built-in rates until the next refresh".
   try {
-    return await loadSheetRates(url);
+    if (!url.startsWith(SHEET_URL_PREFIX)) {
+      throw new Error("RATES_SHEET_URL must be a https://docs.google.com/spreadsheets/ link");
+    }
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!contentType.includes("text/csv")) {
+      // Typically a Google sign-in/consent page: the sheet is not shared as "Anyone with the link".
+      throw new Error(`sheet did not return CSV (content-type: ${contentType || "none"})`);
+    }
+    return parseRates(await res.text());
   } catch (err) {
-    console.error("Rates sheet unavailable, using built-in rates", err);
+    console.error("Rates sheet unavailable, using built-in rates:", err instanceof Error ? err.message : err);
     return fallbackRates;
   }
-}
-
-// Throws on failure on purpose: Next does not cache a thrown error, so a broken sheet or a
-// network blip is retried on the next request instead of being served from cache for minutes.
-async function loadSheetRates(url: string): Promise<Rate[]> {
-  "use cache";
-  cacheLife({ stale: 60, revalidate: 300, expire: 86_400 });
-
-  if (!url.startsWith(SHEET_URL_PREFIX)) {
-    throw new Error("RATES_SHEET_URL must be a https://docs.google.com/spreadsheets/ link");
-  }
-  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return parseRates(await res.text());
 }
