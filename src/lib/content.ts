@@ -58,24 +58,6 @@ export function effectivePrice(rate: Rate) {
   return rate.discountedPrice ?? rate.price;
 }
 
-// Built-in fallback used only when the Google Sheet (see src/lib/rates.ts) cannot be loaded.
-// Keep it in step with the sheet; the sheet is the source of truth.
-export const rates: Rate[] = [
-  { start: "2027-03-27", end: "2027-04-01", price: 194, minNights: 7 },
-  { start: "2027-04-01", end: "2027-05-15", price: 295, minNights: 7 },
-  { start: "2027-05-15", end: "2027-05-29", price: 295, minNights: 7 },
-  { start: "2027-05-29", end: "2027-06-05", price: 272.5, minNights: 7 },
-  { start: "2027-06-05", end: "2027-07-03", price: 338.5, minNights: 7 },
-  { start: "2027-07-03", end: "2027-07-17", price: 470.5, minNights: 7 },
-  { start: "2027-07-17", end: "2027-08-21", price: 514.5, minNights: 7 },
-  { start: "2027-08-21", end: "2027-08-28", price: 470.5, minNights: 7 },
-  { start: "2027-08-28", end: "2027-09-04", price: 338.5, minNights: 7 },
-  { start: "2027-09-04", end: "2027-09-18", price: 272.5, minNights: 7 },
-  { start: "2027-09-18", end: "2027-09-30", price: 228.5, minNights: 7 },
-  { start: "2027-09-30", end: "2027-10-30", price: 194, minNights: 7 },
-  { start: "2027-10-30", end: "2027-11-27", price: 170, minNights: 5 },
-];
-
 export function formatDateRange(start: string, end: string, locale: Locale = defaultLocale) {
   const fmt = new Intl.DateTimeFormat(intlLocales[locale], {
     day: "numeric",

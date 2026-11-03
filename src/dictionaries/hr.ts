@@ -237,7 +237,11 @@ export const hr: Dictionary = {
       invalidEmail: "Unesite valjanu adresu e-pošte.",
       notConfigured: "Slanje još nije postavljeno. Pokušajte ponovno kasnije.",
       sendFailed: "Došlo je do pogreške pri slanju upita. Pokušajte ponovno.",
+      pricesUnavailable: "Trenutno nismo mogli učitati cijene. Pokušajte ponovno kasnije.",
     },
+    pricesLoading: "Učitavanje aktualnih cijena…",
+    pricesFailedTitle: "Cijene nisu dostupne",
+    pricesFailed: "Trenutno nismo mogli dohvatiti cijene. Pokušajte ponovno za nekoliko minuta.",
   },
   notFound: {
     title: "Stranica nije pronađena",

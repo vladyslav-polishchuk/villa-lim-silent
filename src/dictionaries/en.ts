@@ -237,7 +237,11 @@ export const en = {
       invalidEmail: "Please enter a valid email address.",
       notConfigured: "Sending is not configured yet. Please try again later.",
       sendFailed: "Something went wrong sending your request. Please try again.",
+      pricesUnavailable: "We couldn't load the prices right now. Please try again later.",
     },
+    pricesLoading: "Loading current prices…",
+    pricesFailedTitle: "Prices are unavailable",
+    pricesFailed: "We couldn't fetch the prices right now. Please try again in a few minutes.",
   },
   notFound: {
     title: "Page not found",
