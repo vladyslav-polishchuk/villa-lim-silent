@@ -31,7 +31,7 @@ function preferredLocale(acceptLanguage: string | null): Locale {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const firstSegment = pathname.split("/")[1] ?? "";
-  if (hasLocale(firstSegment)) return;
+  if (hasLocale(firstSegment) || firstSegment === "admin") return;
 
   const locale = preferredLocale(request.headers.get("accept-language"));
   const url = request.nextUrl.clone();

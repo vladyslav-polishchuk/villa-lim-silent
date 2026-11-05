@@ -1,16 +1,23 @@
 "use server";
 
-import nodemailer from "nodemailer";
+import { saveBooking } from "@/lib/bookings";
+import { sendMail } from "@/lib/mail";
 import { checkAvailability, type AvailabilityError } from "@/lib/availability";
-import { formatDateRange, quoteStay, villa, type QuoteError } from "@/lib/content";
+import { formatDateRange, siteUrl, quoteStay, villa, type QuoteError } from "@/lib/content";
 import { defaultLocale, hasLocale, localeNames } from "@/lib/i18n";
 import { getAvailability } from "@/lib/istria-lux";
 import { getRates } from "@/lib/rates";
 
-const ENQUIRY_TO = ["gm.vpolishchuk@gmail.com", "zajbermatjaz@gmail.com"];
-
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Comma-separated list of addresses from an environment variable; invalid entries are dropped. */
+function addressList(value: string | undefined) {
+  return (value ?? "")
+    .split(",")
+    .map((address) => address.trim())
+    .filter((address) => EMAIL.test(address));
+}
 
 export type EnquiryError =
   | QuoteError
@@ -69,11 +76,26 @@ export async function sendEnquiry(formData: FormData): Promise<EnquiryResult> {
     return { ok: false, error: conflict };
   }
 
-  const gmailUser = process.env.GMAIL_USER;
-  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
-  if (!gmailUser || !gmailAppPassword) {
-    console.error("GMAIL_USER or GMAIL_APP_PASSWORD is not set");
-    return { ok: false, error: "notConfigured" };
+  const id = crypto.randomUUID();
+  try {
+    const saved = await saveBooking({
+      id,
+      createdAt: Date.now(),
+      name,
+      email,
+      checkIn,
+      checkOut,
+      guests,
+      nights: quote.nights,
+      total: quote.total,
+      message,
+      lang,
+      status: "pending",
+    });
+    if (!saved) console.error("Booking storage is not configured; request was not saved");
+  } catch (err) {
+    // Never break the public form because storage is down; the email below still goes out.
+    console.error("Booking save error", err);
   }
 
   const text = [
@@ -89,25 +111,25 @@ export async function sendEnquiry(formData: FormData): Promise<EnquiryResult> {
     "",
     "Message:",
     message || "(none)",
+    "",
+    `Review: ${siteUrl}/admin`,
   ].join("\n");
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: { user: gmailUser, pass: gmailAppPassword },
-  });
-
-  try {
-    await transporter.sendMail({
-      from: { name: "Villa enquiries", address: gmailUser },
-      to: ENQUIRY_TO,
-      replyTo: { name, address: email },
-      subject: `Stay request: ${checkIn} → ${checkOut}, ${name}`,
-      text,
-    });
-  } catch (err) {
-    console.error("Gmail send error", err);
-    return { ok: false, error: "sendFailed" };
+  const to = addressList(process.env.ENQUIRY_TO);
+  if (to.length === 0) {
+    console.error("ENQUIRY_TO is not set or has no valid email address");
+    return { ok: false, error: "notConfigured" };
   }
+
+  const result = await sendMail({
+    fromName: "Villa enquiries",
+    to,
+    cc: addressList(process.env.ENQUIRY_CC),
+    replyTo: { name, address: email },
+    subject: `Stay request: ${checkIn} → ${checkOut}, ${name}`,
+    text,
+  });
+  if (result !== "ok") return { ok: false, error: result };
 
   return { ok: true };
 }

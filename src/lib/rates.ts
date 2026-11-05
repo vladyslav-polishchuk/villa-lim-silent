@@ -1,152 +1,19 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
+import { db } from "@/lib/bookings";
 import type { Rate } from "@/lib/content";
 
 const MAX_DESCRIPTION_LENGTH = 200;
-
-// Only fetch the sheet over HTTPS from Google (Secure Node.js rule 7): the URL comes from an
-// environment variable, but we rebuild the request URL ourselves from the sheet id and tab.
-const SHEET_URL = /^https:\/\/docs\.google\.com\/spreadsheets\/d\/([A-Za-z0-9_-]+)/;
-const SHEET_GID = /[?#&]gid=(\d+)/;
-
-/**
- * Accepts either the CSV export link or the plain browser link of the sheet
- * (`.../d/<id>/edit?gid=0#gid=0`) and always returns the CSV export URL. The browser link returns
- * an HTML page, which is the easiest mistake to make when pasting into an env var.
- */
-export function toCsvUrl(url: string): string | null {
-  const id = SHEET_URL.exec(url.trim())?.[1];
-  if (!id || id === "e") return null; // "d/e/..." is a "published to web" link, not supported
-  const gid = SHEET_GID.exec(url)?.[1] ?? "0";
-  return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
-}
-
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const PL_DATE = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
-
-/** Minimal RFC 4180 CSV parser: handles quoted fields, escaped quotes and CRLF. */
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let quoted = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    if (quoted) {
-      if (char === '"' && text[i + 1] === '"') {
-        field += '"';
-        i++;
-      } else if (char === '"') {
-        quoted = false;
-      } else {
-        field += char;
-      }
-    } else if (char === '"') {
-      quoted = true;
-    } else if (char === ",") {
-      row.push(field);
-      field = "";
-    } else if (char === "\n" || char === "\r") {
-      if (char === "\r" && text[i + 1] === "\n") i++;
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
-    } else {
-      field += char;
-    }
-  }
-  if (field !== "" || row.length > 0) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows;
-}
 
 function parseDate(value: string): string | null {
-  const text = value.trim();
-  let iso: string | null = null;
-  if (ISO_DATE.test(text)) {
-    iso = text;
-  } else {
-    // Sheets with Polish settings may display a typed date as dd.mm.yyyy.
-    const match = PL_DATE.exec(text);
-    if (match) {
-      iso = `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`;
-    }
-  }
-  if (!iso) return null;
+  const iso = value.trim();
+  if (!ISO_DATE.test(iso)) return null;
   // Reject impossible dates such as 2027-02-31 (they would silently roll over).
   const date = new Date(`${iso}T12:00:00Z`);
   return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== iso ? null : iso;
 }
 
-function parsePrice(value: string): number | null {
-  // Accept "272.5", "272,5" (Polish decimal comma) and "€ 272.50".
-  const text = value.replace(/[€\s]/g, "").replace(",", ".");
-  if (!/^\d+(\.\d+)?$/.test(text)) return null;
-  const price = Number(text);
-  return Number.isFinite(price) && price > 0 ? price : null;
-}
-
-function parseNights(value: string): number | null {
-  const text = value.trim();
-  if (!/^\d{1,3}$/.test(text)) return null;
-  const nights = Number(text);
-  return nights >= 1 ? nights : null;
-}
-
-/**
- * Turn the sheet CSV into a validated, sorted rate list. Throws on any bad row so a typo in the
- * sheet never produces a half-broken price list; the caller then falls back to the built-in rates.
- */
-export function parseRates(csv: string): Rate[] {
-  const [header, ...body] = parseCsv(csv);
-  if (!header) throw new Error("sheet is empty");
-
-  const column = (name: string) => header.findIndex((h) => h.trim().toLowerCase() === name);
-  const startCol = column("start");
-  const endCol = column("end");
-  const priceCol = column("regular price");
-  const discountCol = column("discounted price");
-  const nightsCol = column("min nights");
-  const descriptionCol = column("description");
-  if (startCol < 0 || endCol < 0 || priceCol < 0 || nightsCol < 0) {
-    throw new Error("sheet header is missing a required column");
-  }
-
-  const rates: Rate[] = [];
-  body.forEach((cells, index) => {
-    if (cells.every((cell) => cell.trim() === "")) return; // blank row
-    const line = index + 2; // 1-based, header is line 1
-
-    const start = parseDate(cells[startCol] ?? "");
-    const end = parseDate(cells[endCol] ?? "");
-    const regular = parsePrice(cells[priceCol] ?? "");
-    const discountText = discountCol >= 0 ? (cells[discountCol] ?? "").trim() : "";
-    const discounted = discountText === "" ? null : parsePrice(discountText);
-    const minNights = parseNights(cells[nightsCol] ?? "");
-
-    if (!start || !end || end <= start) throw new Error(`row ${line}: invalid dates`);
-    if (regular === null) throw new Error(`row ${line}: invalid regular price`);
-    if (discountText !== "" && discounted === null) {
-      throw new Error(`row ${line}: invalid discounted price`);
-    }
-    if (minNights === null) throw new Error(`row ${line}: invalid min nights`);
-
-    const rate: Rate = { start, end, price: regular, minNights };
-    // A discount only counts when it is actually lower; otherwise keep the regular price.
-    if (discounted !== null && discounted < regular) {
-      rate.discountedPrice = discounted;
-      // Rendered as plain React text (escaped), so only length needs bounding here.
-      const description = (descriptionCol >= 0 ? (cells[descriptionCol] ?? "") : "").trim();
-      if (description !== "") rate.description = description.slice(0, MAX_DESCRIPTION_LENGTH);
-    }
-    rates.push(rate);
-  });
-
-  if (rates.length === 0) throw new Error("sheet has no rate rows");
-
+function sortAndCheckOverlap(rates: Rate[]): Rate[] {
   rates.sort((a, b) => a.start.localeCompare(b.start));
   for (let i = 1; i < rates.length; i++) {
     if (rates[i].start < rates[i - 1].end) {
@@ -156,38 +23,91 @@ export function parseRates(csv: string): Rate[] {
   return rates;
 }
 
+/** Validate seasons entered in the admin form. Throws an Error with a readable message. */
+export function validateRates(input: Rate[]): Rate[] {
+  if (input.length === 0) throw new Error("add at least one season");
+  const rates = input.map((r, i): Rate => {
+    const line = `season ${i + 1}`;
+    const start = parseDate(r.start);
+    const end = parseDate(r.end);
+    if (!start || !end || end <= start) throw new Error(`${line}: invalid dates`);
+    if (!Number.isFinite(r.price) || r.price <= 0 || r.price > 100_000) {
+      throw new Error(`${line}: invalid regular price`);
+    }
+    if (!Number.isInteger(r.minNights) || r.minNights < 1 || r.minNights > 365) {
+      throw new Error(`${line}: invalid min nights`);
+    }
+    const rate: Rate = { start, end, price: r.price, minNights: r.minNights };
+    if (r.discountedPrice !== undefined) {
+      if (!Number.isFinite(r.discountedPrice) || r.discountedPrice <= 0 || r.discountedPrice >= r.price) {
+        throw new Error(`${line}: discounted price must be lower than the regular price`);
+      }
+      rate.discountedPrice = r.discountedPrice;
+      const description = r.description?.trim().slice(0, MAX_DESCRIPTION_LENGTH);
+      if (description) rate.description = description;
+    }
+    return rate;
+  });
+  return sortAndCheckOverlap(rates);
+}
+
+type RateRow = {
+  start_date: string;
+  end_date: string;
+  price: string;
+  discounted_price: string | null;
+  min_nights: number;
+  description: string | null;
+};
+
+async function loadStoredRates(): Promise<Rate[]> {
+  const sql = await db();
+  if (!sql) return [];
+  const rows = (await sql`SELECT * FROM rates ORDER BY start_date`) as RateRow[];
+  return rows.map((r) => {
+    const rate: Rate = {
+      start: r.start_date,
+      end: r.end_date,
+      price: Number(r.price),
+      minNights: r.min_nights,
+    };
+    if (r.discounted_price !== null) rate.discountedPrice = Number(r.discounted_price);
+    if (r.description) rate.description = r.description;
+    return rate;
+  });
+}
+
+export async function saveRates(rates: Rate[]) {
+  const sql = await db();
+  if (!sql) throw new Error("database is not configured");
+  await sql.transaction([
+    sql`DELETE FROM rates`,
+    ...rates.map(
+      (r) => sql`INSERT INTO rates (start_date, end_date, price, discounted_price, min_nights, description)
+        VALUES (${r.start}, ${r.end}, ${r.price}, ${r.discountedPrice ?? null}, ${r.minNights}, ${r.description ?? null})`,
+    ),
+  ]);
+}
+
 /**
- * Seasonal rates edited by the owner in a Google Sheet (RATES_SHEET_URL). The sheet is the only
- * source of prices: returns `null` when it cannot be loaded or is invalid, and callers show a
- * "prices unavailable" state instead of made-up numbers.
+ * Seasonal rates edited by the owner in the admin page; the database is the only source of prices.
+ * Returns `null` when they cannot be loaded or none are saved yet, and callers show a "prices
+ * unavailable" state instead of made-up numbers.
  */
 export async function getRates(): Promise<Rate[] | null> {
   "use cache";
+  cacheTag("rates");
 
   // Never let this function throw: an error inside a "use cache" function fails the static
   // prerender (and so the whole deploy), even when the caller catches it.
   try {
-    const raw = process.env.RATES_SHEET_URL;
-    if (!raw) throw new Error("RATES_SHEET_URL is not set (restart the server after editing .env.local)");
-    const url = toCsvUrl(raw);
-    if (!url) {
-      throw new Error("RATES_SHEET_URL must be a https://docs.google.com/spreadsheets/d/<id>/... link");
-    }
-
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const contentType = res.headers.get("content-type") ?? "";
-    if (!contentType.includes("text/csv")) {
-      // Typically a Google sign-in page: the sheet is not shared as "Anyone with the link: Viewer".
-      throw new Error(`sheet did not return CSV (content-type: ${contentType || "none"})`);
-    }
-    const rates = parseRates(await res.text());
-
+    const rates = await loadStoredRates();
+    if (rates.length === 0) throw new Error("no rates saved yet (add them on /admin)");
     cacheLife({ stale: 60, revalidate: 300, expire: 86_400 });
     return rates;
   } catch (err) {
-    console.error("Rates sheet unavailable:", err instanceof Error ? err.message : err);
-    // Keep a failure for seconds, not minutes, so the site recovers as soon as the sheet does.
+    console.error("Rates unavailable:", err instanceof Error ? err.message : err);
+    // Keep a failure for seconds, not minutes, so the site recovers as soon as rates are saved.
     cacheLife({ stale: 0, revalidate: 15, expire: 60 });
     return null;
   }

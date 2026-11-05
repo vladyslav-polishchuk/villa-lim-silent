@@ -22,7 +22,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Enquiry emails
 
-The reservation form sends each request by email from a Gmail account using [Nodemailer](https://nodemailer.com) (free, roughly 500 emails/day). The recipients are set in `ENQUIRY_TO` in `src/app/actions.ts`.
+The reservation form sends each request by email from a Gmail account using [Nodemailer](https://nodemailer.com) (free, roughly 500 emails/day). The recipients come from environment variables: `ENQUIRY_TO` (required) and `ENQUIRY_CC` (optional), each a comma-separated list of addresses. Set them in `.env.local` and in the host's environment variables.
 
 1. Turn on 2-Step Verification for the sending Google account, then create an [App Password](https://myaccount.google.com/apppasswords).
 2. Add the credentials to `.env.local` locally, and to your host's environment variables in production:
@@ -34,14 +34,10 @@ The reservation form sends each request by email from a Gmail account using [Nod
 
 ## Seasonal prices (Google Sheet)
 
-The owner edits prices in a Google Sheet; the site reads it as CSV and refreshes within about 5 minutes, with no deploy.
+The owner edits prices on the `/admin` page (Prices section); they are stored in the `rates` table of the Postgres database and are the only source of prices. Saving refreshes the site immediately.
 
-- Columns (first row): `start`, `end`, `regular price`, `discounted price`, `description`, `min nights`. `end` is the first day that is **not** in the season. If `discounted price` is filled in (and lower than `regular price`), the table shows the regular price crossed out, the discounted price next to it, and `description` as a tooltip; quotes use the discounted price. Leave `discounted price` empty for no discount (`description` is then not shown).
-- Format `start`, `end` and the price columns as **Plain text** so dates stay `YYYY-MM-DD` and prices keep a `.` decimal.
-- Set `RATES_SHEET_URL` (locally in `.env.local`, and in the host's environment variables) to `https://docs.google.com/spreadsheets/d/<SHEET_ID>/export?format=csv&gid=<TAB_GID>`. Share the sheet as "Anyone with the link: Viewer" and keep edit access limited to the owner.
-- After changing `.env.local`, restart `npm run dev`; the server only reads it at startup.
-- The sheet is the only source of prices. While it loads the reservation section shows a loading state; if it is unreachable or a row is invalid (bad date, overlapping seasons, ...), the section shows "Prices are unavailable" and the problem is logged (`Rates sheet unavailable: ...`). A failure is retried within about 15 seconds.
-- `RATES_SHEET_URL` can be either the CSV export link or the normal browser link of the sheet (`.../d/<id>/edit?gid=0`); the app converts it to the CSV export link.
+- Each season has `start`, `end` (the first day that is **not** in the season), a regular price, an optional discounted price (must be lower), a minimum number of nights and an optional discount note. Seasons must not overlap. If a discounted price is set, the table shows the regular price crossed out, the discounted price next to it and the note as a tooltip; quotes use the discounted price.
+- If the database is unreachable or no seasons are saved yet, the reservation section shows "Prices are unavailable" and the problem is logged (`Rates unavailable: ...`). A failure is retried within about 15 seconds.
 
 ## Learn More
 
