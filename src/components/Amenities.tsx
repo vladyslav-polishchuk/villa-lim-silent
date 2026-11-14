@@ -1,4 +1,5 @@
 import type { Dictionary } from "@/dictionaries/en";
+import { FeatureList } from "@/components/FeatureList";
 
 export function Amenities({ t }: { t: Dictionary["amenities"] }) {
   return (
@@ -11,11 +12,9 @@ export function Amenities({ t }: { t: Dictionary["amenities"] }) {
             <h3 className="border-b border-line pb-3 font-serif text-2xl">
               {group.title}
             </h3>
-            <ul className="mt-5 space-y-2 text-ink-soft">
-              {group.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+            <div className="mt-5">
+              <FeatureList items={group.items} />
+            </div>
           </div>
         ))}
       </div>

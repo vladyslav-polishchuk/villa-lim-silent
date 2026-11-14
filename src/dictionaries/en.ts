@@ -1,3 +1,4 @@
+import type { Feature } from "@/lib/features";
 import type { PluralForms } from "@/lib/i18n";
 
 export const en = {
@@ -62,9 +63,33 @@ export const en = {
     intro:
       "Each room sleeps two, with air conditioning and a TV. Two modern bathrooms with showers sit between the wings of the house.",
     bedrooms: [
-      { name: "Bedroom 1", details: ["King bed", "Air conditioning", "TV", "Garden view"] },
-      { name: "Bedroom 2", details: ["King bed", "Air conditioning", "TV", "Pool access"] },
-      { name: "Bedroom 3", details: ["King bed", "Air conditioning", "TV", "Quiet wing"] },
+      {
+        name: "Bedroom 1",
+        details: [
+          { icon: "bed", label: "King bed" },
+          { icon: "airConditioning", label: "Air conditioning" },
+          { icon: "tv", label: "TV" },
+          { icon: "garden", label: "Garden view" },
+        ] satisfies Feature[],
+      },
+      {
+        name: "Bedroom 2",
+        details: [
+          { icon: "bed", label: "King bed" },
+          { icon: "airConditioning", label: "Air conditioning" },
+          { icon: "tv", label: "TV" },
+          { icon: "pool", label: "Pool access" },
+        ] satisfies Feature[],
+      },
+      {
+        name: "Bedroom 3",
+        details: [
+          { icon: "bed", label: "King bed" },
+          { icon: "airConditioning", label: "Air conditioning" },
+          { icon: "tv", label: "TV" },
+          { icon: "quiet", label: "Quiet wing" },
+        ] satisfies Feature[],
+      },
     ],
   },
   amenities: {
@@ -74,38 +99,38 @@ export const en = {
       {
         title: "Kitchen",
         items: [
-          "Oven & stove",
-          "Refrigerator & freezer",
-          "Dishwasher",
-          "Microwave",
-          "Coffee machine",
-          "Kettle & toaster",
-          "High chair",
-        ],
+          { icon: "oven", label: "Oven & stove" },
+          { icon: "refrigerator", label: "Refrigerator & freezer" },
+          { icon: "dishwasher", label: "Dishwasher" },
+          { icon: "microwave", label: "Microwave" },
+          { icon: "coffee", label: "Coffee machine" },
+          { icon: "kettle", label: "Kettle & toaster" },
+          { icon: "highChair", label: "High chair" },
+        ] satisfies Feature[],
       },
       {
         title: "Indoors",
         items: [
-          "140 m² living space",
-          "Air conditioning",
-          "Free Wi-Fi",
-          "Satellite TV",
-          "Safe & iron",
-          "Two bathrooms with showers",
-          "Hair dryers",
-        ],
+          { icon: "livingSpace", label: "140 m² living space" },
+          { icon: "airConditioning", label: "Air conditioning" },
+          { icon: "wifi", label: "Free Wi-Fi" },
+          { icon: "tv", label: "Satellite TV" },
+          { icon: "safe", label: "Safe & iron" },
+          { icon: "shower", label: "Two bathrooms with showers" },
+          { icon: "hairDryer", label: "Hair dryers" },
+        ] satisfies Feature[],
       },
       {
         title: "Outdoors",
         items: [
-          "Heated pool, 31.5 m²",
-          "Sun deck & loungers",
-          "Barbecue",
-          "Covered dining terrace",
-          "Garden, 650 m²",
-          "Fully enclosed fence",
-          "Private parking",
-        ],
+          { icon: "pool", label: "Heated pool, 31.5 m²" },
+          { icon: "lounger", label: "Sun deck & loungers" },
+          { icon: "barbecue", label: "Barbecue" },
+          { icon: "dining", label: "Covered dining terrace" },
+          { icon: "garden", label: "Garden, 650 m²" },
+          { icon: "fence", label: "Fully enclosed fence" },
+          { icon: "parking", label: "Private parking" },
+        ] satisfies Feature[],
       },
     ],
   },

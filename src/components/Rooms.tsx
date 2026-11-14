@@ -1,4 +1,5 @@
 import type { Dictionary } from "@/dictionaries/en";
+import { FeatureList } from "@/components/FeatureList";
 
 export function Rooms({ t }: { t: Dictionary["rooms"] }) {
   return (
@@ -16,14 +17,9 @@ export function Rooms({ t }: { t: Dictionary["rooms"] }) {
               className="rounded-3xl bg-paper p-8 shadow-[0_20px_50px_-32px_rgba(27,34,40,0.4)]"
             >
               <h3 className="font-serif text-3xl">{room.name}</h3>
-              <ul className="mt-6 space-y-2 text-ink-soft">
-                {room.details.map((detail) => (
-                  <li key={detail} className="flex gap-3">
-                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-gold" />
-                    {detail}
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-6">
+                <FeatureList items={room.details} />
+              </div>
             </article>
           ))}
         </div>
