@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --ink: #1b2228;
@@ -8,6 +8,7 @@
   --cream: #f4efe6;
   --paper: #fbf8f2;
   --line: rgba(27, 34, 40, 0.12);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
@@ -34,4 +35,67 @@ body {
 
 ::selection {
   background: color-mix(in srgb, var(--gold) 45%, white);
+}
+
+@keyframes hero-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scene-settle {
+  from {
+    transform: scale(1.045);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-scene {
+    animation: scene-settle 3s var(--ease-out) both;
+  }
+
+  .hero-enter {
+    animation: hero-arrive 1.5s var(--ease-out) both;
+  }
+
+  .hero-enter:nth-child(2) {
+    animation-delay: 80ms;
+  }
+  .hero-enter:nth-child(3) {
+    animation-delay: 160ms;
+  }
+  .hero-enter:nth-child(4) {
+    animation-delay: 240ms;
+  }
+
+  .hero-enter:focus-within {
+    animation: none;
+  }
+
+  @media (max-width: 767px) {
+    .hero-enter {
+      animation-duration: 875ms;
+    }
+
+    .hero-enter:nth-child(2) {
+      animation-delay: 40ms;
+    }
+    .hero-enter:nth-child(3) {
+      animation-delay: 80ms;
+    }
+    .hero-enter:nth-child(4) {
+      animation-delay: 120ms;
+    }
+    .hero-scene {
+      animation-duration: 1.6875s;
+    }
+  }
 }
